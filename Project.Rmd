@@ -3,7 +3,7 @@ title: "Practical Machine Learning Project"
 output:
   html_document:
     theme: spacelab
- 
+    keep_md: true
 ---
 
 ## Introduction
@@ -113,7 +113,7 @@ error<- 1- accuracy
 error
 ```
 
-Using the reserved validate data set, we get an out of sample error of  ~ 0.6 %.  This is close to the OOB error of the model.  The precitions are 99.4% accurate for the validate data set.  
+Using the reserved validate data set, we get an out of sample error of  ~ 0.6 %.  This is close to the OOB error of the model.  The precitions are 99.4% accurate for the validate data set.  The out of sample error for this model is estimated to be about 0.6 %.
 
 
 ##  Predicting classes in the testing data

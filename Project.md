@@ -1,40 +1,5 @@
 # Practical Machine Learning Project
 
-```r
-library(downloader)
-```
-
-```
-## Warning: package 'downloader' was built under R version 3.1.2
-```
-
-```r
-library(plyr)
-library(caret)
-```
-
-```
-## Warning: package 'caret' was built under R version 3.1.3
-```
-
-```
-## Loading required package: lattice
-## Loading required package: ggplot2
-```
-
-```r
-library(randomForest)
-```
-
-```
-## Warning: package 'randomForest' was built under R version 3.1.2
-```
-
-```
-## randomForest 4.6-10
-## Type rfNews() to see new features/changes/bug fixes.
-```
-
 ## Introduction
 This project uses data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants.
 
@@ -47,7 +12,15 @@ The test data are available [here](https://d396qusza40orc.cloudfront.net/predmac
 The data for this project come from this [source](http://groupware.les.inf.puc-rio.br/har).  See the website for more information.  
 
 
+## Load libraries
 
+
+```r
+library(downloader)
+library(plyr)
+library(caret)
+library(randomForest)
+```
 
 ## Data load
 
@@ -61,14 +34,13 @@ allTraining <- read.csv("./../data/training.csv",na.strings=c("NA", "#DIV/0!"), 
 
 ## Data cleaning
 
-I cleaned the training data set.  I didn't clean the testing data set. 
-
 The first step in the data cleaning was to convert the classe variable in the training data to a factor.  
 
 The raw training data contains many NAs.  I chose to eliminate any columns that have 90% or more NAs.  
 
-Also I dropped the columns relating to the user and timestamps, and the row numbers - namely columns X, user_name, new_window, num_window, raw_timestamp_part_1, raw_timestamp_part_2, and cvtd_timestamp.    
+Also I dropped the columns relating to the user, timestamps, windows, and the row numbers - namely columns X, user_name, new_window, num_window, raw_timestamp_part_1, raw_timestamp_part_2, and cvtd_timestamp.      
 
+I didn't clean the testing data set. 
 
 ```r
 # Convert classe to factor variable
@@ -88,7 +60,7 @@ allTraining<- allTraining[, colSums(is.na(allTraining)) < nrow(allTraining) * 0.
 allTraining <-subset(allTraining, 
                     select=-c(X, user_name, new_window, num_window, raw_timestamp_part_1, raw_timestamp_part_2, cvtd_timestamp))
 ```
-After cleaning, the training data is a dataframe of 13737 obs. of  53 variables.  I inspect the structure below.  
+After cleaning, the training data is a dataframe of  19622 obs. of  53 variables.  I inspect the structure below.  
 
 
 ```r
@@ -228,7 +200,16 @@ confusionMatrix(validate$classe, pred)$table
 ```
 
 ```r
-error<- 1- (sum(pred == validate$classe) / length(pred))
+accuracy <- (sum(pred == validate$classe) / length(pred))
+accuracy
+```
+
+```
+## [1] 0.9940527
+```
+
+```r
+error<- 1- accuracy 
 error
 ```
 
@@ -236,7 +217,8 @@ error
 ## [1] 0.005947324
 ```
 
-Using the reserved validate data set, we get an out of sample error of  ~ 0.6 %.  This is close to the OOB error of the model.  
+Using the reserved validate data set, we get an out of sample error of  ~ 0.6 %.  This is close to the OOB error of the model.  The precitions are 99.4% accurate for the validate data set.  The out of sample error for this model is estimated to be about 0.6 %.
+
 
 ##  Predicting classes in the testing data
 The final part of the assignment was to use the model to predict the classe variable for the supplied testing data, which comprises 20 test cases.  This occurs below.  
