@@ -1,0 +1,144 @@
+---
+title: "Practical Machine Learning Project"
+output:
+  html_document:
+    theme: spacelab
+ 
+---
+
+## Introduction
+This project uses data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants.
+
+The goal of this project was to predict the manner in which particpants did the exercise (the "classe" variable in the training set) and to use prediction model to predict 20 different test cases. 
+
+The training data for this project are available [here](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv)
+
+The test data are available [here](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv)
+
+The data for this project come from this [source](http://groupware.les.inf.puc-rio.br/har).  See the website for more information.  
+
+
+## Load libraries
+
+```{r results='hide', message=FALSE, warning=FALSE}
+library(downloader)
+library(plyr)
+library(caret)
+library(randomForest)
+```
+
+## Data load
+
+The training and testing data sets were downloaded from the urls above and saved locally. The code below reads them into r.   
+
+```{r  loadData}
+testing <- read.csv("./../data/testing.csv",na.strings=c("NA", "#DIV/0!"), header=TRUE, stringsAsFactors=FALSE)
+allTraining <- read.csv("./../data/training.csv",na.strings=c("NA", "#DIV/0!"), header=TRUE, stringsAsFactors=FALSE)
+```
+
+## Data cleaning
+
+The first step in the data cleaning was to convert the classe variable in the training data to a factor.  
+
+The raw training data contains many NAs.  I chose to eliminate any columns that have 90% or more NAs.  
+
+Also I dropped the columns relating to the user, timestamps, windows, and the row numbers - namely columns X, user_name, new_window, num_window, raw_timestamp_part_1, raw_timestamp_part_2, and cvtd_timestamp.      
+
+I didn't clean the testing data set. 
+```{r dataCleaning}
+# Convert classe to factor variable
+allTraining$classe <- as.factor(allTraining$classe)
+levels(allTraining$classe)
+#filter out columns with more than 90% NAs
+allTraining<- allTraining[, colSums(is.na(allTraining)) < nrow(allTraining) * 0.9]
+
+#drop columns relating to metadata
+allTraining <-subset(allTraining, 
+                    select=-c(X, user_name, new_window, num_window, raw_timestamp_part_1, raw_timestamp_part_2, cvtd_timestamp))
+
+```
+After cleaning, the training data is a dataframe of  19622 obs. of  53 variables.  I inspect the structure below.  
+
+```{r dataAudit}
+str(allTraining)
+```
+## Split training data into training and validation set for cross validation.  
+Next, I split the training data into two sets - one called training for building the model and one called validate for cross validation. I chose to reserve 30% of the supplied training data for a validation set.  
+
+```{r partitionTrainingData}
+set.seed(1520)
+include<-createDataPartition(allTraining$classe, p=0.7, list=F)
+training <- allTraining[include,]
+
+validate <- allTraining[-include,]
+
+
+```
+## Build the model on training set 
+I decided to use a random forest to build the model as it's one of the most widely used and highly accurate methods for prediction. After reading the discussion forums, I decided to use the randomForest function from the package of the same name as it's much faster than the rf method in the caret package. 
+
+```{r runRF}
+set.seed(2015)
+modelFit <- randomForest(classe ~ ., data=training, importance = FALSE)
+print(modelFit)
+
+
+```
+
+In generating the model, 500 trees were built, with 7 variables tried at each split.  
+
+Let's look at the top ten variables by importance
+
+```{r importance}
+
+varImpPlot(modelFit, n.var=10)
+```
+
+The most important variable is roll_belt, followed by yaw_belt.  
+
+##  Out of sample error
+The OOB (out of bag) error is an estimate of the out of sample error.  It's very small - only half a percent (0.5%). We will check for overfitting using cross validation in the next section.  
+
+## Cross validation
+
+It's known that random forests can lead to overfitting, so it's important to cross validate the model. I use the model to predict the classe variable on the reserved validate data set. The confusion matrix shows the correctly classified cases on the diagnonal.  The out of sample error is estimated as the proportion of off-diagnonal elements.
+
+```{r outOfSampleError}
+pred <- predict(modelFit, newdata=validate)
+
+confusionMatrix(validate$classe, pred)$table
+accuracy <- (sum(pred == validate$classe) / length(pred))
+accuracy
+error<- 1- accuracy 
+error
+```
+
+Using the reserved validate data set, we get an out of sample error of  ~ 0.6 %.  This is close to the OOB error of the model.  The precitions are 99.4% accurate for the validate data set.  
+
+
+##  Predicting classes in the testing data
+The final part of the assignment was to use the model to predict the classe variable for the supplied testing data, which comprises 20 test cases.  This occurs below.  
+
+```{r predict}
+result <- predict(modelFit, newdata= testing)
+result <- as.character(result)
+result
+```
+
+
+## Write output files for submission
+The following code writes the output files for submission.  
+```{r writeOutput}
+pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+
+pml_write_files(result)
+
+```
+
+
