@@ -1,12 +1,9 @@
 # Practical Machine Learning
 This repo contains my submission for the project for the Coursera Practical Machine Learning course.
 
-The rmarkdown file is Project.rmd.
+Please view Project.md, which is the markdown file of my project writeup.
 
-The file Project.md is the markdown file of my project writeup.
+To evaluate the rendered HTML file, please download the repo using the Download ZIP button at the bottom of the menu on the right hand side of the repo page and open Project.html in your web browser.  
 
-A rendered html version can be obtained from downloading the file Project.html.
-
-
-
+The Rmarkdown file is Project.Rmd.
 

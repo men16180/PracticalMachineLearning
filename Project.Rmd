@@ -2,8 +2,8 @@
 title: "Practical Machine Learning Project"
 output:
   html_document:
-    theme: spacelab
     keep_md: true
+    theme: united
 ---
 
 ## Introduction
